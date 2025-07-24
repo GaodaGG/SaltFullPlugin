@@ -1,4 +1,4 @@
-package com.gg.saltPlayerPlugin;
+package com.gg.SaltFullPlugin;
 
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;

@@ -37,9 +37,9 @@ test {
     useJUnitPlatform()
 }
 
-def pluginClass = "com.gg.saltPlayerPlugin.MainPlugin"
+def pluginClass = "com.gg.SaltFullPlugin.MainPlugin"
 def pluginId = "全屏化SPW窗口"
-def pluginVersion = "0.0.5"
+def pluginVersion = "0.0.6"
 def pluginProvider = "GaodaGG"
 
 tasks.named("jar") {

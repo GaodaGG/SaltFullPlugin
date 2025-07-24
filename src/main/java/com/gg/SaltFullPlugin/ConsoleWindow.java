@@ -1,4 +1,4 @@
-package com.gg.saltPlayerPlugin;
+package com.gg.SaltFullPlugin;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;

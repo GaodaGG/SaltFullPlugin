@@ -1,4 +1,4 @@
-package com.gg.saltPlayerPlugin;
+package com.gg.SaltFullPlugin;
 
 import org.pf4j.Plugin;
 
