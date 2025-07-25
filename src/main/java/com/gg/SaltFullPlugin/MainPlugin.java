@@ -20,30 +20,37 @@ public class MainPlugin extends Plugin {
         super.start();
         System.out.println("MainPlugin started");
 //        ConsoleWindow.showConsole();
-
-//        new Thread(() -> {
-//            try {
-//                while (true) {
-//                    Thread.sleep(3000);
-//                    Window[] windows = Window.getWindows();
-//                    for (Window window : windows) {
-//                        if (window instanceof Frame) {
-//                            continue;
-//                        }
-//
-////                        window.setAlwaysOnTop(true);
-////                        WindowZOrderSetter.setWindowZBand(window, WindowZOrderSetter.ZBID_SYSTEM_TOOLS);
-//                        System.out.println("Window: " + window.getName() + " is set to always on top.");
-//                    }
-//                }
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }).start();
+        new Thread(this::hideLyricBarFromTaskBar).start();
 
         new Thread(this::makeAllWindowsFullscreen).start();
     }
 
+    private void hideLyricBarFromTaskBar() {
+        Window lyricBar = null;
+
+        while (true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            Window[] windows = Window.getWindows();
+            if (lyricBar != null && lyricBar.isActive()) {
+                continue;
+            } else {
+                lyricBar = null;
+            }
+
+            for (Window window : windows) {
+                if ((window instanceof JFrame)) {
+                    continue;
+                }
+                lyricBar = window;
+
+                WindowZOrderSetter.hideFromTaskbar(window);
+            }
+        }
+    }
     private void makeAllWindowsFullscreen() {
         while (true) {
             try {

@@ -9,10 +9,13 @@ import com.sun.jna.win32.StdCallLibrary;
 
 import java.awt.*;
 
+import static com.sun.jna.platform.win32.WinUser.GWL_EXSTYLE;
+
 public class WindowZOrderSetter {
     // Windows API 常量
     public static final int ZBID_SYSTEM_TOOLS = 16;
     public static final int ZBID_DESKTOP = 1;
+    public static final int WS_EX_TOOLWINDOW = 0x00000080;
     private static final int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private static final int DWMWCP_DONOTROUND = 1;
 
@@ -77,7 +80,7 @@ public class WindowZOrderSetter {
     // 禁用 Windows 11 圆角
     public static void disableRoundedCorners(WinDef.HWND hwnd) {
         try {
-//            if (!isWindows11OrHigher()) return;
+            if (!isWindows11OrHigher()) return;
 
             IntByReference preference = new IntByReference(DWMWCP_DONOTROUND);
             Dwmapi.INSTANCE.DwmSetWindowAttribute(
@@ -94,7 +97,7 @@ public class WindowZOrderSetter {
     // 恢复 Windows 11 圆角
     public static void enableRoundedCorners(WinDef.HWND hwnd) {
         try {
-//            if (!isWindows11OrHigher()) return;
+            if (!isWindows11OrHigher()) return;
 
             IntByReference preference = new IntByReference(0); // 恢复默认圆角
             Dwmapi.INSTANCE.DwmSetWindowAttribute(
@@ -108,10 +111,29 @@ public class WindowZOrderSetter {
         }
     }
 
+    // 隐藏窗口的任务栏条目
+    public static void hideFromTaskbar(Window window) {
+        try {
+            // 获取窗口句柄
+            WinDef.HWND hwnd = getWindowHandle(window);
+            if (hwnd == null) return;
+
+            // 获取当前扩展样式
+            int exStyle = User32.INSTANCE.GetWindowLongA(hwnd, GWL_EXSTYLE);
+
+            // 添加工具窗口样式
+            exStyle |= WS_EX_TOOLWINDOW;
+
+            // 设置新的扩展样式
+            User32.INSTANCE.SetWindowLongA(hwnd, GWL_EXSTYLE, exStyle);
+        } catch (Exception e) {
+            System.err.println("隐藏任务栏条目失败: " + e.getMessage());
+        }
+    }
+
     // 获取窗口句柄 (HWND) - 兼容性更好的版本
     public static WinDef.HWND getWindowHandle(Window window) {
         try {
-            // 方法1: 使用 Component 的 peer
             if (window instanceof Frame frame) {
                 return new WinDef.HWND(Native.getWindowPointer(frame));
             } else if (window instanceof Dialog dialog) {
@@ -145,6 +167,10 @@ public class WindowZOrderSetter {
     // 定义 User32 接口
     public interface User32 extends StdCallLibrary {
         User32 INSTANCE = Native.load("user32", User32.class);
+
+        int GetWindowLongA(WinDef.HWND hWnd, int nIndex);
+
+        int SetWindowLongA(WinDef.HWND hWnd, int nIndex, int dwNewLong);
 
         WinDef.HWND FindWindowW(WString lpClassName, WString lpWindowName);
 
