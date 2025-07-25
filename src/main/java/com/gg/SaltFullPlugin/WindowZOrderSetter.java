@@ -150,18 +150,8 @@ public class WindowZOrderSetter {
     // 检查是否为 Windows 11 或更高版本
     private static boolean isWindows11OrHigher() {
         String os = System.getProperty("os.name", "").toLowerCase();
-        if (!os.contains("windows")) return false;
-
-        try {
-            String version = System.getProperty("os.version");
-            String[] parts = version.split("\\.");
-            if (parts.length < 3) return false;
-
-            int build = Integer.parseInt(parts[2]);
-            return build >= 22000; // Windows 11 从 22000 开始
-        } catch (Exception e) {
-            return false;
-        }
+        System.out.println("当前操作系统: " + os);
+        return "windows 11".equals(os);
     }
 
     // 定义 User32 接口

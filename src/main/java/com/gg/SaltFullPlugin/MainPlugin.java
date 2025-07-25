@@ -19,7 +19,7 @@ public class MainPlugin extends Plugin {
     public void start() {
         super.start();
         System.out.println("MainPlugin started");
-//        ConsoleWindow.showConsole();
+        ConsoleWindow.showConsole();
         new Thread(this::hideLyricBarFromTaskBar).start();
 
         new Thread(this::makeAllWindowsFullscreen).start();
@@ -42,7 +42,7 @@ public class MainPlugin extends Plugin {
             }
 
             for (Window window : windows) {
-                if ((window instanceof JFrame)) {
+                if (window instanceof JFrame) {
                     continue;
                 }
                 lyricBar = window;
