@@ -8,18 +8,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MainPlugin extends Plugin {
-    Map<String, WindowState> windowSizes = new HashMap<>();
-    Map<String, Boolean> windowStates = new HashMap<>();
-    Shape shape = null;
+    private Map<String, WindowState> windowSizes = new HashMap<>();
+    private Map<String, Boolean> windowStates = new HashMap<>();
 
-    int maxWidth = Integer.MAX_VALUE;
-    int maxHeight = Integer.MAX_VALUE;
+    private int maxWidth = Integer.MAX_VALUE;
+    private int maxHeight = Integer.MAX_VALUE;
 
     @Override
     public void start() {
         super.start();
         System.out.println("MainPlugin started");
-        ConsoleWindow.showConsole();
+//        ConsoleWindow.showConsole();
         new Thread(this::hideLyricBarFromTaskBar).start();
 
         new Thread(this::makeAllWindowsFullscreen).start();
@@ -51,7 +50,13 @@ public class MainPlugin extends Plugin {
             }
         }
     }
+
     private void makeAllWindowsFullscreen() {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            WindowZOrderSetter.allowSleep();
+            System.out.println("已恢复系统睡眠功能");
+        }));
+
         while (true) {
             try {
                 Thread.sleep(1000);
@@ -61,10 +66,9 @@ public class MainPlugin extends Plugin {
             Window[] windows = Window.getWindows();
 
             for (Window window : windows) {
-                if (!(window instanceof JFrame)) {
+                if (!(window instanceof JFrame frame)) {
                     continue;
                 }
-                JFrame frame = (JFrame) window;
 
                 //判断是否全屏
                 if (frame.getExtendedState() != Frame.MAXIMIZED_BOTH) {
@@ -83,36 +87,48 @@ public class MainPlugin extends Plugin {
                 SwingUtilities.invokeLater(() -> {
                     System.out.println(frame.getTitle() + " state " + (windowStates.get(frame.getTitle()) == null || !windowStates.get(frame.getTitle())));
                     if (windowStates.get(frame.getTitle()) == null || !windowStates.get(frame.getTitle())) {
-                        shape = frame.getShape();
-                        windowStates.put(frame.getTitle(), true);
-
-                        frame.setSize(maxWidth, maxHeight);
-                        frame.setLocation(bounds.x, bounds.y);
-                        frame.setAlwaysOnTop(true);
-
-                        WindowZOrderSetter.disableRoundedCorners(WindowZOrderSetter.getWindowHandle(frame));
-
-                        System.out.println("Made window " + frame.getTitle() + " fullscreen.");
-                        System.out.println("Window size: " + frame.getWidth() + "x" + frame.getHeight());
-                    } else {
-                        frame.setAlwaysOnTop(false);
-                        frame.setSize(windowSizes.get(frame.getTitle()).getWidth(),
-                                windowSizes.get(frame.getTitle()).getHeight());
-                        frame.setLocation(windowSizes.get(frame.getTitle()).getX(),
-                                windowSizes.get(frame.getTitle()).getY());
-
-//                        frame.setShape(shape); // 恢复原来的形状
-                        WindowZOrderSetter.enableRoundedCorners(WindowZOrderSetter.getWindowHandle(frame));
-
-                        windowStates.put(frame.getTitle(), false);
-                        System.out.println("Restored window " + frame.getTitle() + " to its original size.");
-                        System.out.println("Window size: " + frame.getWidth() + "x" + frame.getHeight());
+                        setFullScreen(frame, bounds);
+                        return;
                     }
 
+                    restoreWindow(frame);
                 });
             }
         }
     }
+
+    private void setFullScreen(JFrame frame, Rectangle bounds) {
+        windowStates.put(frame.getTitle(), true);
+
+        frame.setSize(maxWidth, maxHeight);
+        frame.setLocation(bounds.x, bounds.y);
+        frame.setAlwaysOnTop(true);
+        frame.setAlwaysOnTop(false);
+
+        WindowZOrderSetter.disableRoundedCorners(WindowZOrderSetter.getWindowHandle(frame));
+        WindowZOrderSetter.preventSleep(true);
+
+        System.out.println("Made window " + frame.getTitle() + " fullscreen.");
+        System.out.println("Window size: " + frame.getWidth() + "x" + frame.getHeight());
+    }
+
+    private void restoreWindow(JFrame frame) {
+        frame.setAlwaysOnTop(false);
+        frame.setSize(windowSizes.get(frame.getTitle()).getWidth(),
+                windowSizes.get(frame.getTitle()).getHeight());
+        frame.setLocation(windowSizes.get(frame.getTitle()).getX(),
+                windowSizes.get(frame.getTitle()).getY());
+
+        WindowZOrderSetter.enableRoundedCorners(WindowZOrderSetter.getWindowHandle(frame));
+
+        windowStates.put(frame.getTitle(), false);
+
+        WindowZOrderSetter.allowSleep();
+
+        System.out.println("Restored window " + frame.getTitle() + " to its original size.");
+        System.out.println("Window size: " + frame.getWidth() + "x" + frame.getHeight());
+    }
+
 
     class WindowState {
         private int width;

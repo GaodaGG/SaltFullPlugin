@@ -16,8 +16,53 @@ public class WindowZOrderSetter {
     public static final int ZBID_SYSTEM_TOOLS = 16;
     public static final int ZBID_DESKTOP = 1;
     public static final int WS_EX_TOOLWINDOW = 0x00000080;
+    public static final int ES_CONTINUOUS = 0x80000000;
+    public static final int ES_SYSTEM_REQUIRED = 0x00000001;
+    public static final int ES_DISPLAY_REQUIRED = 0x00000002;
     private static final int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private static final int DWMWCP_DONOTROUND = 1;
+    private static WinDef.DWORD currentState = null;
+
+    /**
+     * 阻止系统进入睡眠状态
+     *
+     * @param keepDisplayOn 是否保持显示器开启
+     */
+    public static void preventSleep(boolean keepDisplayOn) {
+        int flags = ES_CONTINUOUS | ES_SYSTEM_REQUIRED;
+        if (keepDisplayOn) {
+            flags |= ES_DISPLAY_REQUIRED;
+        }
+
+        currentState = Kernel32.INSTANCE.SetThreadExecutionState(new WinDef.DWORD(flags));
+    }
+
+    /**
+     * 恢复系统默认睡眠行为
+     */
+    public static void allowSleep() {
+        if (currentState != null) {
+            Kernel32.INSTANCE.SetThreadExecutionState(currentState);
+            currentState = null;
+        } else {
+            // 恢复默认状态
+            Kernel32.INSTANCE.SetThreadExecutionState(new WinDef.DWORD(ES_CONTINUOUS));
+        }
+    }
+
+    /**
+     * 临时阻止睡眠（直到下一次系统事件）
+     *
+     * @param keepDisplayOn 是否保持显示器开启
+     */
+    public static void preventSleepTemporarily(boolean keepDisplayOn) {
+        int flags = ES_SYSTEM_REQUIRED;
+        if (keepDisplayOn) {
+            flags |= ES_DISPLAY_REQUIRED;
+        }
+
+        Kernel32.INSTANCE.SetThreadExecutionState(new WinDef.DWORD(flags));
+    }
 
     // 设置窗口到特定 Z 序级别
     public static boolean setWindowZBand(Window window, int zBandId) {
@@ -152,6 +197,14 @@ public class WindowZOrderSetter {
         String os = System.getProperty("os.name", "").toLowerCase();
         System.out.println("当前操作系统: " + os);
         return "windows 11".equals(os);
+    }
+
+    // 定义 Kernel32 接口
+    public interface Kernel32 extends StdCallLibrary {
+        Kernel32 INSTANCE = Native.load("kernel32", Kernel32.class);
+
+        // 设置线程执行状态
+        WinDef.DWORD SetThreadExecutionState(WinDef.DWORD esFlags);
     }
 
     // 定义 User32 接口
