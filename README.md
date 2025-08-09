@@ -5,4 +5,6 @@
 
 # **不需要解压!!**
 
+## 其他插件:
+[Discord 丰富状态](https://github.com/GaodaGG/SaltDiscordPlugin)
 ~~AI真好用~~
