@@ -6,6 +6,8 @@
 # **不需要解压!!**
 
 ## 其他插件:
+[Steam 丰富状态扩展](https://github.com/GaodaGG/SaltSteamPlugin)
+
 [Discord 丰富状态](https://github.com/GaodaGG/SaltDiscordPlugin)
 
 ~~AI真好用~~
