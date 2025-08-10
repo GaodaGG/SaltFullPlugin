@@ -26,8 +26,8 @@ dependencies {
     compileOnly 'net.java.dev.jna:jna:5.17.0'
 
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:2.0.21"
-    compileOnly "com.github.Moriafly:spw-workshop-api:0.1.0-dev06"
-    kapt "com.github.Moriafly:spw-workshop-api:0.1.0-dev06"
+    compileOnly "com.github.Moriafly:spw-workshop-api:0.1.0-dev08"
+    kapt "com.github.Moriafly:spw-workshop-api:0.1.0-dev08"
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -43,7 +43,7 @@ def pluginVersion = "0.0.7"
 def pluginProvider = "GaodaGG"
 
 tasks.named("jar") {
-    destinationDirectory = file("C://Users/123/AppData/Roaming/Salt Player for Windows/workshop/")
+    destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/")
     archiveFileName = "plugin-${pluginId}-${pluginVersion}.jar"
 
     manifest {
@@ -55,7 +55,7 @@ tasks.named("jar") {
 }
 
 tasks.register("plugin", Jar) {
-    destinationDirectory = file("C://Users/123/AppData/Roaming/Salt Player for Windows/workshop")
+    destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/")
     archiveFileName = "plugin-${pluginId}-${pluginVersion}.zip"
     archiveBaseName.set("plugin-" + pluginId + "-" + pluginVersion)
 

@@ -9,7 +9,7 @@ import com.sun.jna.win32.StdCallLibrary;
 
 import java.awt.*;
 
-import static com.sun.jna.platform.win32.WinUser.GWL_EXSTYLE;
+import static com.sun.jna.platform.win32.WinUser.*;
 
 public class WindowZOrderSetter {
     // Windows API 常量
@@ -21,6 +21,7 @@ public class WindowZOrderSetter {
     public static final int ES_DISPLAY_REQUIRED = 0x00000002;
     private static final int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private static final int DWMWCP_DONOTROUND = 1;
+    private static final int WS_EX_WINDOWEDGE = 256;
     private static WinDef.DWORD currentState = null;
 
     /**
@@ -120,6 +121,48 @@ public class WindowZOrderSetter {
                 0, 0, 0, 0,
                 SWP_FLAGS
         );
+    }
+
+    // 禁用窗口边框和阴影
+    public static void disableWindowsBorder(WinDef.HWND hWnd) {
+        try {
+            int style = User32.INSTANCE.GetWindowLongA(hWnd, GWL_STYLE);
+            int exStyle = User32.INSTANCE.GetWindowLongA(hWnd, GWL_EXSTYLE);
+
+            // 移除边框和阴影样式
+            style &= ~(WS_BORDER);
+            style &= ~(WS_THICKFRAME);
+            exStyle &= ~(WS_EX_WINDOWEDGE);
+            exStyle &= ~(WS_EX_COMPOSITED);
+
+
+            User32.INSTANCE.SetWindowLongA(hWnd, GWL_STYLE, style);
+            User32.INSTANCE.SetWindowLongA(hWnd, GWL_EXSTYLE, exStyle);
+
+            User32.INSTANCE.SetWindowPos(hWnd, null, 0, 0, 0, 0,
+                    SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
+
+        } catch (Exception e) {
+            System.err.println("禁用边框失败: " + e.getMessage());
+        }
+    }
+
+    // 恢复窗口边框和阴影
+    public static void enableWindowsBorder(WinDef.HWND hWnd) {
+        int style = User32.INSTANCE.GetWindowLongA(hWnd, GWL_STYLE);
+        int exStyle = User32.INSTANCE.GetWindowLongA(hWnd, GWL_EXSTYLE);
+
+        style |= WS_BORDER;
+        style |= WS_THICKFRAME;
+        exStyle |= WS_EX_WINDOWEDGE;
+        exStyle |= WS_EX_COMPOSITED;
+
+        User32.INSTANCE.SetWindowLongA(hWnd, GWL_STYLE, style);
+        User32.INSTANCE.SetWindowLongA(hWnd, GWL_EXSTYLE, exStyle);
+
+        User32.INSTANCE.SetWindowPos(hWnd, null, 0, 0, 0, 0,
+                SWP_FRAMECHANGED | SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW);
+
     }
 
     // 禁用 Windows 11 圆角

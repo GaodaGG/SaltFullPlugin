@@ -1,5 +1,6 @@
 package com.gg.SaltFullPlugin;
 
+import com.sun.jna.platform.win32.WinDef;
 import org.pf4j.Plugin;
 
 import javax.swing.*;
@@ -105,7 +106,9 @@ public class MainPlugin extends Plugin {
         frame.setAlwaysOnTop(true);
         frame.setAlwaysOnTop(false);
 
-        WindowZOrderSetter.disableRoundedCorners(WindowZOrderSetter.getWindowHandle(frame));
+        WinDef.HWND hWnd = WindowZOrderSetter.getWindowHandle(frame);
+        WindowZOrderSetter.disableWindowsBorder(hWnd);
+        WindowZOrderSetter.disableRoundedCorners(hWnd);
         WindowZOrderSetter.preventSleep(true);
 
         System.out.println("Made window " + frame.getTitle() + " fullscreen.");
@@ -119,7 +122,9 @@ public class MainPlugin extends Plugin {
         frame.setLocation(windowSizes.get(frame.getTitle()).getX(),
                 windowSizes.get(frame.getTitle()).getY());
 
-        WindowZOrderSetter.enableRoundedCorners(WindowZOrderSetter.getWindowHandle(frame));
+        WinDef.HWND hWnd = WindowZOrderSetter.getWindowHandle(frame);
+        WindowZOrderSetter.enableWindowsBorder(hWnd);
+        WindowZOrderSetter.enableRoundedCorners(hWnd);
 
         windowStates.put(frame.getTitle(), false);
 
