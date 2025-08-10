@@ -39,7 +39,7 @@ test {
 
 def pluginClass = "com.gg.SaltFullPlugin.MainPlugin"
 def pluginId = "全屏化SPW窗口"
-def pluginVersion = "0.0.7"
+def pluginVersion = "0.0.8"
 def pluginProvider = "GaodaGG"
 
 tasks.named("jar") {
