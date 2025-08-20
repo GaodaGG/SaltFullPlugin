@@ -20,7 +20,7 @@ public class MainPlugin extends Plugin {
         super.start();
         System.out.println("MainPlugin started");
 //        ConsoleWindow.showConsole();
-        new Thread(this::hideLyricBarFromTaskBar).start();
+//        new Thread(this::hideLyricBarFromTaskBar).start();
 
         new Thread(this::makeAllWindowsFullscreen).start();
     }
@@ -70,7 +70,7 @@ public class MainPlugin extends Plugin {
                 if (!(window instanceof JFrame frame)) {
                     continue;
                 }
-
+                
                 //判断是否全屏
                 if (frame.getExtendedState() != Frame.MAXIMIZED_BOTH) {
                     if (maxWidth > frame.getWidth() && maxHeight > frame.getHeight()) {
