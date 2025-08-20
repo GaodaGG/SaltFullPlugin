@@ -31,7 +31,7 @@ public class ConsoleWindow {
             textArea.setBackground(Color.BLACK);
             textArea.setForeground(Color.GREEN);
             // 设置支持中文的字体
-            textArea.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
+            textArea.setFont(new Font("Noto Sans", Font.PLAIN, 12));
 
             JScrollPane scrollPane = new JScrollPane(textArea);
             consoleFrame.add(scrollPane);
