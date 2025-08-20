@@ -22,6 +22,7 @@ public class WindowZOrderSetter {
     private static final int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
     private static final int DWMWCP_DONOTROUND = 1;
     private static final int WS_EX_WINDOWEDGE = 256;
+    private static final int WS_EX_DLGMODALFRAME = 0x000000001;
     private static WinDef.DWORD currentState = null;
 
     /**
@@ -132,9 +133,10 @@ public class WindowZOrderSetter {
             // 移除边框和阴影样式
             style &= ~(WS_BORDER);
             style &= ~(WS_THICKFRAME);
+//            style &= ~(WS_CAPTION);
             exStyle &= ~(WS_EX_WINDOWEDGE);
             exStyle &= ~(WS_EX_COMPOSITED);
-
+//            exStyle &= ~(WS_EX_DLGMODALFRAME);
 
             User32.INSTANCE.SetWindowLongA(hWnd, GWL_STYLE, style);
             User32.INSTANCE.SetWindowLongA(hWnd, GWL_EXSTYLE, exStyle);
@@ -154,8 +156,10 @@ public class WindowZOrderSetter {
 
         style |= WS_BORDER;
         style |= WS_THICKFRAME;
+//        style |= WS_CAPTION;
         exStyle |= WS_EX_WINDOWEDGE;
         exStyle |= WS_EX_COMPOSITED;
+//        exStyle |= WS_EX_DLGMODALFRAME;
 
         User32.INSTANCE.SetWindowLongA(hWnd, GWL_STYLE, style);
         User32.INSTANCE.SetWindowLongA(hWnd, GWL_EXSTYLE, exStyle);

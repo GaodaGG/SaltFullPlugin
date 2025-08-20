@@ -5,12 +5,16 @@ import org.pf4j.Plugin;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.AWTEventListener;
+import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("unused")
 public class MainPlugin extends Plugin {
-    private Map<String, WindowState> windowSizes = new HashMap<>();
-    private Map<String, Boolean> windowStates = new HashMap<>();
+
+    private final Map<String, WindowState> windowSizes = new HashMap<>();
+    private final Map<String, Boolean> windowStates = new HashMap<>();
 
     private int maxWidth = Integer.MAX_VALUE;
     private int maxHeight = Integer.MAX_VALUE;
@@ -58,28 +62,25 @@ public class MainPlugin extends Plugin {
             System.out.println("已恢复系统睡眠功能");
         }));
 
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        AWTEventListener eventListener = event -> {
+            if (event.getID() != WindowEvent.WINDOW_OPENED && event.getID() != WindowEvent.WINDOW_STATE_CHANGED) {
+                return;
             }
-            Window[] windows = Window.getWindows();
 
-            for (Window window : windows) {
-                if (!(window instanceof JFrame frame)) {
-                    continue;
-                }
-                
-                //判断是否全屏
-                if (frame.getExtendedState() != Frame.MAXIMIZED_BOTH) {
-                    if (maxWidth > frame.getWidth() && maxHeight > frame.getHeight()) {
-                        windowSizes.put(frame.getTitle(), new WindowState(frame.getWidth(), frame.getHeight(),
-                                frame.getX(), frame.getY()));
-                    }
-                    continue;
-                }
+            Window window = (Window) event.getSource();
+            if (!(window instanceof JFrame frame)) {
+                return;
+            }
 
+            System.out.println("Window state changed: " + frame.getTitle() + " - " + event.getID());
+
+            if (event.getID() == WindowEvent.WINDOW_OPENED) {
+                windowSizes.put(frame.getTitle(), new WindowState(frame.getWidth(), frame.getHeight(),
+                        frame.getX(), frame.getY()));
+                return;
+            }
+
+            if (frame.getExtendedState() == Frame.MAXIMIZED_BOTH) {
                 GraphicsDevice device = frame.getGraphicsConfiguration().getDevice();
                 Rectangle bounds = device.getDefaultConfiguration().getBounds();
                 maxWidth = bounds.width;
@@ -95,7 +96,9 @@ public class MainPlugin extends Plugin {
                     restoreWindow(frame);
                 });
             }
-        }
+        };
+
+        Toolkit.getDefaultToolkit().addAWTEventListener(eventListener, AWTEvent.WINDOW_EVENT_MASK);
     }
 
     private void setFullScreen(JFrame frame, Rectangle bounds) {
@@ -135,11 +138,11 @@ public class MainPlugin extends Plugin {
     }
 
 
-    class WindowState {
-        private int width;
-        private int height;
-        private int x;
-        private int y;
+    static class WindowState {
+        private final int width;
+        private final int height;
+        private final int x;
+        private final int y;
 
         public WindowState(int width, int height, int x, int y) {
             this.width = width;
@@ -162,6 +165,16 @@ public class MainPlugin extends Plugin {
 
         public int getY() {
             return y;
+        }
+
+        @Override
+        public String toString() {
+            return "WindowState{" +
+                    "width=" + width +
+                    ", height=" + height +
+                    ", x=" + x +
+                    ", y=" + y +
+                    '}';
         }
     }
 }
