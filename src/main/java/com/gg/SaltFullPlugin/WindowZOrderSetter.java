@@ -134,8 +134,9 @@ public class WindowZOrderSetter {
             style &= ~(WS_BORDER);
             style &= ~(WS_THICKFRAME);
 //            style &= ~(WS_CAPTION);
+            style &= ~(WS_OVERLAPPED);
             exStyle &= ~(WS_EX_WINDOWEDGE);
-            exStyle &= ~(WS_EX_COMPOSITED);
+//            exStyle &= ~(WS_EX_COMPOSITED);
 //            exStyle &= ~(WS_EX_DLGMODALFRAME);
 
             User32.INSTANCE.SetWindowLongA(hWnd, GWL_STYLE, style);
@@ -157,8 +158,9 @@ public class WindowZOrderSetter {
         style |= WS_BORDER;
         style |= WS_THICKFRAME;
 //        style |= WS_CAPTION;
+        style |= WS_OVERLAPPED;
         exStyle |= WS_EX_WINDOWEDGE;
-        exStyle |= WS_EX_COMPOSITED;
+//        exStyle |= WS_EX_COMPOSITED;
 //        exStyle |= WS_EX_DLGMODALFRAME;
 
         User32.INSTANCE.SetWindowLongA(hWnd, GWL_STYLE, style);

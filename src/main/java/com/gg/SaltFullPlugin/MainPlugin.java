@@ -24,36 +24,8 @@ public class MainPlugin extends Plugin {
         super.start();
         System.out.println("MainPlugin started");
 //        ConsoleWindow.showConsole();
-//        new Thread(this::hideLyricBarFromTaskBar).start();
 
         new Thread(this::makeAllWindowsFullscreen).start();
-    }
-
-    private void hideLyricBarFromTaskBar() {
-        Window lyricBar = null;
-
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            Window[] windows = Window.getWindows();
-            if (lyricBar != null && lyricBar.isActive()) {
-                continue;
-            } else {
-                lyricBar = null;
-            }
-
-            for (Window window : windows) {
-                if (window instanceof JFrame) {
-                    continue;
-                }
-                lyricBar = window;
-
-                WindowZOrderSetter.hideFromTaskbar(window);
-            }
-        }
     }
 
     private void makeAllWindowsFullscreen() {
@@ -120,10 +92,10 @@ public class MainPlugin extends Plugin {
 
     private void restoreWindow(JFrame frame) {
         frame.setAlwaysOnTop(false);
-        frame.setSize(windowSizes.get(frame.getTitle()).getWidth(),
-                windowSizes.get(frame.getTitle()).getHeight());
-        frame.setLocation(windowSizes.get(frame.getTitle()).getX(),
-                windowSizes.get(frame.getTitle()).getY());
+        frame.setSize(windowSizes.get(frame.getTitle()).width(),
+                windowSizes.get(frame.getTitle()).height());
+        frame.setLocation(windowSizes.get(frame.getTitle()).x(),
+                windowSizes.get(frame.getTitle()).y());
 
         WinDef.HWND hWnd = WindowZOrderSetter.getWindowHandle(frame);
         WindowZOrderSetter.enableWindowsBorder(hWnd);
@@ -138,35 +110,7 @@ public class MainPlugin extends Plugin {
     }
 
 
-    static class WindowState {
-        private final int width;
-        private final int height;
-        private final int x;
-        private final int y;
-
-        public WindowState(int width, int height, int x, int y) {
-            this.width = width;
-            this.height = height;
-            this.x = x;
-            this.y = y;
-        }
-
-        public int getWidth() {
-            return width;
-        }
-
-        public int getHeight() {
-            return height;
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
+    record WindowState(int width, int height, int x, int y) {
         @Override
         public String toString() {
             return "WindowState{" +
