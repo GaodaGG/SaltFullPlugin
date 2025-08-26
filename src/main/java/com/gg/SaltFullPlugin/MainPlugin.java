@@ -12,20 +12,61 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public class MainPlugin extends Plugin {
-
     private final Map<String, WindowState> windowSizes = new HashMap<>();
     private final Map<String, Boolean> windowStates = new HashMap<>();
 
     private int maxWidth = Integer.MAX_VALUE;
     private int maxHeight = Integer.MAX_VALUE;
 
+    AWTEventListener eventListener = event -> {
+        if (event.getID() != WindowEvent.WINDOW_OPENED && event.getID() != WindowEvent.WINDOW_STATE_CHANGED) {
+            return;
+        }
+
+        Window window = (Window) event.getSource();
+        if (!(window instanceof JFrame frame)) {
+            return;
+        }
+
+        System.out.println("Window state changed: " + frame.getTitle() + " - " + event.getID());
+
+        if (event.getID() == WindowEvent.WINDOW_OPENED) {
+            windowSizes.put(frame.getTitle(), new WindowState(frame.getWidth(), frame.getHeight(),
+                    frame.getX(), frame.getY()));
+            return;
+        }
+
+        if (frame.getExtendedState() == Frame.MAXIMIZED_BOTH) {
+            GraphicsDevice device = frame.getGraphicsConfiguration().getDevice();
+            Rectangle bounds = device.getDefaultConfiguration().getBounds();
+            maxWidth = bounds.width;
+            maxHeight = bounds.height;
+
+            SwingUtilities.invokeLater(() -> {
+                System.out.println(frame.getTitle() + " state " + (windowStates.get(frame.getTitle()) == null || !windowStates.get(frame.getTitle())));
+                if (windowStates.get(frame.getTitle()) == null || !windowStates.get(frame.getTitle())) {
+                    setFullScreen(frame, bounds);
+                    return;
+                }
+
+                restoreWindow(frame);
+            });
+        }
+    };
+
     @Override
     public void start() {
         super.start();
         System.out.println("MainPlugin started");
 //        ConsoleWindow.showConsole();
+        makeAllWindowsFullscreen();
+    }
 
-        new Thread(this::makeAllWindowsFullscreen).start();
+    @Override
+    public void stop() {
+        super.stop();
+
+        Toolkit.getDefaultToolkit().removeAWTEventListener(eventListener);
     }
 
     private void makeAllWindowsFullscreen() {
@@ -33,42 +74,6 @@ public class MainPlugin extends Plugin {
             WindowZOrderSetter.allowSleep();
             System.out.println("已恢复系统睡眠功能");
         }));
-
-        AWTEventListener eventListener = event -> {
-            if (event.getID() != WindowEvent.WINDOW_OPENED && event.getID() != WindowEvent.WINDOW_STATE_CHANGED) {
-                return;
-            }
-
-            Window window = (Window) event.getSource();
-            if (!(window instanceof JFrame frame)) {
-                return;
-            }
-
-            System.out.println("Window state changed: " + frame.getTitle() + " - " + event.getID());
-
-            if (event.getID() == WindowEvent.WINDOW_OPENED) {
-                windowSizes.put(frame.getTitle(), new WindowState(frame.getWidth(), frame.getHeight(),
-                        frame.getX(), frame.getY()));
-                return;
-            }
-
-            if (frame.getExtendedState() == Frame.MAXIMIZED_BOTH) {
-                GraphicsDevice device = frame.getGraphicsConfiguration().getDevice();
-                Rectangle bounds = device.getDefaultConfiguration().getBounds();
-                maxWidth = bounds.width;
-                maxHeight = bounds.height;
-
-                SwingUtilities.invokeLater(() -> {
-                    System.out.println(frame.getTitle() + " state " + (windowStates.get(frame.getTitle()) == null || !windowStates.get(frame.getTitle())));
-                    if (windowStates.get(frame.getTitle()) == null || !windowStates.get(frame.getTitle())) {
-                        setFullScreen(frame, bounds);
-                        return;
-                    }
-
-                    restoreWindow(frame);
-                });
-            }
-        };
 
         Toolkit.getDefaultToolkit().addAWTEventListener(eventListener, AWTEvent.WINDOW_EVENT_MASK);
     }
