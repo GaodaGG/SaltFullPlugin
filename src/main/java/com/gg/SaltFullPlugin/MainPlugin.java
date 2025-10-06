@@ -16,10 +16,6 @@ import java.util.Map;
 public class MainPlugin extends Plugin {
     private final Map<String, WindowState> windowSizes = new HashMap<>();
     private final Map<String, Boolean> windowStates = new HashMap<>();
-
-    private int maxWidth = Integer.MAX_VALUE;
-    private int maxHeight = Integer.MAX_VALUE;
-
     ComponentAdapter adjustListener = new ComponentAdapter() {
         @Override
         public void componentResized(ComponentEvent e) {
@@ -31,7 +27,8 @@ public class MainPlugin extends Plugin {
             putWindowSize((Window) e.getSource());
         }
     };
-
+    private int maxWidth = Integer.MAX_VALUE;
+    private int maxHeight = Integer.MAX_VALUE;
     AWTEventListener eventListener = event -> {
         if (event.getID() != WindowEvent.WINDOW_OPENED && event.getID() != WindowEvent.WINDOW_STATE_CHANGED) {
             return;
@@ -105,6 +102,15 @@ public class MainPlugin extends Plugin {
             WindowZOrderSetter.allowSleep();
             System.out.println("已恢复系统睡眠功能");
         }));
+
+        for (Window window : Window.getWindows()) {
+            if (!(window instanceof JFrame frame)) {
+                return;
+            }
+
+            putWindowSize(window);
+            frame.addComponentListener(adjustListener);
+        }
 
         Toolkit.getDefaultToolkit().addAWTEventListener(eventListener, AWTEvent.WINDOW_EVENT_MASK);
     }
