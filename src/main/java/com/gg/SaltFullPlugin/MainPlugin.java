@@ -82,6 +82,9 @@ public class MainPlugin extends Plugin {
         super.stop();
 
         Toolkit.getDefaultToolkit().removeAWTEventListener(eventListener);
+        for (Window window : Window.getWindows()) {
+            window.removeComponentListener(adjustListener);
+        }
     }
 
     private void putWindowSize(Window window) {
