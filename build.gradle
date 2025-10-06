@@ -13,6 +13,7 @@ java {
 }
 
 repositories {
+    mavenLocal()
     mavenCentral()
     maven {
         url = 'https://jitpack.io'
@@ -22,12 +23,12 @@ repositories {
 dependencies {
 //    implementation "com.code-disaster.steamworks4j:steamworks4j:1.9.0"
     // https://mvnrepository.com/artifact/net.java.dev.jna/jna-platform
-    implementation 'net.java.dev.jna:jna-platform:5.17.0'
+    compileOnly 'net.java.dev.jna:jna-platform:5.17.0'
     compileOnly 'net.java.dev.jna:jna:5.17.0'
 
     compileOnly "org.jetbrains.kotlin:kotlin-stdlib:2.0.21"
-    compileOnly "com.github.Moriafly:spw-workshop-api:0.1.0-dev08"
-    kapt "com.github.Moriafly:spw-workshop-api:0.1.0-dev08"
+    compileOnly "com.github.Moriafly:spw-workshop-api:0.1.0-dev14"
+    kapt "com.github.Moriafly:spw-workshop-api:0.1.0-dev14"
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -38,26 +39,32 @@ test {
 }
 
 def pluginClass = "com.gg.SaltFullPlugin.MainPlugin"
-def pluginId = "全屏化SPW窗口"
-def pluginVersion = "0.0.9"
+def pluginId = "com.gg.SaltFullPlugin"
+def pluginName = "全屏化SPW窗口"
+def pluginVersion = "0.1.0"
 def pluginProvider = "GaodaGG"
+def pluginDescription = "将SPW窗口全屏化"
+def pluginOpenSourceUrl = "https://github.com/GaodaGG/SaltFullPlugin"
 
 tasks.named("jar") {
-    destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/")
+    destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/plugins/")
     archiveFileName = "plugin-${pluginId}-${pluginVersion}.jar"
 
     manifest {
         attributes["Plugin-Class"] = pluginClass
         attributes["Plugin-Id"] = pluginId
+        attributes["Plugin-Name"] = pluginName
         attributes["Plugin-Version"] = pluginVersion
         attributes["Plugin-Provider"] = pluginProvider
+        attributes["Plugin-Description"] = pluginDescription
+        attributes["Plugin-Open-Source-Url"] = pluginOpenSourceUrl
     }
 }
 
 tasks.register("plugin", Jar) {
-    destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/")
-    archiveFileName = "plugin-${pluginId}-${pluginVersion}.zip"
-    archiveBaseName.set("plugin-" + pluginId + "-" + pluginVersion)
+    destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/plugins/")
+    archiveFileName = "plugin-${pluginName}-${pluginVersion}.zip"
+    archiveBaseName.set("plugin-" + pluginName + "-" + pluginVersion)
 
     into("classes") {
         with(tasks.named("jar").get())

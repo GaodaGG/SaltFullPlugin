@@ -6,6 +6,8 @@ import org.pf4j.Plugin;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.AWTEventListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +19,18 @@ public class MainPlugin extends Plugin {
 
     private int maxWidth = Integer.MAX_VALUE;
     private int maxHeight = Integer.MAX_VALUE;
+
+    ComponentAdapter adjustListener = new ComponentAdapter() {
+        @Override
+        public void componentResized(ComponentEvent e) {
+            putWindowSize((Window) e.getSource());
+        }
+
+        @Override
+        public void componentMoved(ComponentEvent e) {
+            putWindowSize((Window) e.getSource());
+        }
+    };
 
     AWTEventListener eventListener = event -> {
         if (event.getID() != WindowEvent.WINDOW_OPENED && event.getID() != WindowEvent.WINDOW_STATE_CHANGED) {
@@ -31,8 +45,9 @@ public class MainPlugin extends Plugin {
         System.out.println("Window state changed: " + frame.getTitle() + " - " + event.getID());
 
         if (event.getID() == WindowEvent.WINDOW_OPENED) {
-            windowSizes.put(frame.getTitle(), new WindowState(frame.getWidth(), frame.getHeight(),
-                    frame.getX(), frame.getY()));
+            putWindowSize(window);
+
+            frame.addComponentListener(adjustListener);
             return;
         }
 
@@ -67,6 +82,19 @@ public class MainPlugin extends Plugin {
         super.stop();
 
         Toolkit.getDefaultToolkit().removeAWTEventListener(eventListener);
+    }
+
+    private void putWindowSize(Window window) {
+        if (!(window instanceof JFrame frame)) {
+            return;
+        }
+
+        if (frame.getExtendedState() == Frame.MAXIMIZED_BOTH || Boolean.TRUE.equals(windowStates.get(frame.getTitle()))) {
+            return;
+        }
+
+        windowSizes.put(frame.getTitle(), new WindowState(frame.getWidth(), frame.getHeight(),
+                frame.getX(), frame.getY()));
     }
 
     private void makeAllWindowsFullscreen() {
