@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.gg.saltPlayerPlugin'
-version = '1.0.0'
+version = '0.1.1'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -41,20 +41,19 @@ test {
 def pluginClass = "com.gg.SaltFullPlugin.MainPlugin"
 def pluginId = "com.gg.SaltFullPlugin"
 def pluginName = "全屏化SPW窗口"
-def pluginVersion = "0.1.0"
 def pluginProvider = "GaodaGG"
 def pluginDescription = "将SPW窗口全屏化"
 def pluginOpenSourceUrl = "https://github.com/GaodaGG/SaltFullPlugin"
 
 tasks.named("jar") {
     destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/plugins/")
-    archiveFileName = "plugin-${pluginId}-${pluginVersion}.jar"
+    archiveFileName = "plugin-${pluginId}-${version}.jar"
 
     manifest {
         attributes["Plugin-Class"] = pluginClass
         attributes["Plugin-Id"] = pluginId
         attributes["Plugin-Name"] = pluginName
-        attributes["Plugin-Version"] = pluginVersion
+        attributes["Plugin-Version"] = version
         attributes["Plugin-Provider"] = pluginProvider
         attributes["Plugin-Description"] = pluginDescription
         attributes["Plugin-Open-Source-Url"] = pluginOpenSourceUrl
@@ -63,8 +62,8 @@ tasks.named("jar") {
 
 tasks.register("plugin", Jar) {
     destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/plugins/")
-    archiveFileName = "plugin-${pluginName}-${pluginVersion}.zip"
-    archiveBaseName.set("plugin-" + pluginName + "-" + pluginVersion)
+    archiveFileName = "plugin-${pluginName}-${version}.zip"
+    archiveBaseName.set("plugin-" + pluginName + "-" + version)
 
     into("classes") {
         with(tasks.named("jar").get())
