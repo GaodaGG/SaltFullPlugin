@@ -174,7 +174,7 @@ public class WindowZOrderSetter {
     // 禁用 Windows 11 圆角
     public static void disableRoundedCorners(WinDef.HWND hwnd) {
         try {
-            if (!isWindows11OrHigher()) return;
+            if (isLowerThanWindows11()) return;
 
             IntByReference preference = new IntByReference(DWMWCP_DONOTROUND);
             Dwmapi.INSTANCE.DwmSetWindowAttribute(
@@ -191,7 +191,7 @@ public class WindowZOrderSetter {
     // 恢复 Windows 11 圆角
     public static void enableRoundedCorners(WinDef.HWND hwnd) {
         try {
-            if (!isWindows11OrHigher()) return;
+            if (isLowerThanWindows11()) return;
 
             IntByReference preference = new IntByReference(0); // 恢复默认圆角
             Dwmapi.INSTANCE.DwmSetWindowAttribute(
@@ -241,11 +241,11 @@ public class WindowZOrderSetter {
         }
     }
 
-    // 检查是否为 Windows 11 或更高版本
-    private static boolean isWindows11OrHigher() {
+    // 检查是否为 Windows 11 或更低版本
+    private static boolean isLowerThanWindows11() {
         String os = System.getProperty("os.name", "").toLowerCase();
         System.out.println("当前操作系统: " + os);
-        return "windows 11".equals(os);
+        return !"windows 11".equals(os);
     }
 
     // 定义 Kernel32 接口
