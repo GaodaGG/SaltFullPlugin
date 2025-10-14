@@ -1,4 +1,5 @@
 package com.gg.SaltFullPlugin;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
@@ -35,7 +36,7 @@ public class ConsoleWindow {
 
             JScrollPane scrollPane = new JScrollPane(textArea);
             consoleFrame.add(scrollPane);
-            consoleFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+            consoleFrame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
             consoleFrame.setSize(800, 600);
             consoleFrame.setVisible(true);
 
@@ -44,30 +45,26 @@ public class ConsoleWindow {
     }
 
     private static void redirectSystemStreams() {
-        try {
-            // 使用UTF-8编码的输出流
-            OutputStream out = new OutputStream() {
-                private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        // 使用UTF-8编码的输出流
+        OutputStream out = new OutputStream() {
+            private ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
-                @Override
-                public void write(int b) throws IOException {
-                    if (b == '\n') {
-                        String text = new String(buffer.toByteArray(), StandardCharsets.UTF_8);
-                        SwingUtilities.invokeLater(() -> {
-                            textArea.append(text + "\n");
-                            textArea.setCaretPosition(textArea.getDocument().getLength());
-                        });
-                        buffer.reset();
-                    } else {
-                        buffer.write(b);
-                    }
+            @Override
+            public void write(int b) {
+                if (b == '\n') {
+                    String text = buffer.toString(StandardCharsets.UTF_8);
+                    SwingUtilities.invokeLater(() -> {
+                        textArea.append(text + "\n");
+                        textArea.setCaretPosition(textArea.getDocument().getLength());
+                    });
+                    buffer.reset();
+                } else {
+                    buffer.write(b);
                 }
-            };
+            }
+        };
 
-            System.setOut(new PrintStream(out, true, "UTF-8"));
-            System.setErr(new PrintStream(out, true, "UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+        System.setOut(new PrintStream(out, true, StandardCharsets.UTF_8));
+        System.setErr(new PrintStream(out, true, StandardCharsets.UTF_8));
     }
 }
