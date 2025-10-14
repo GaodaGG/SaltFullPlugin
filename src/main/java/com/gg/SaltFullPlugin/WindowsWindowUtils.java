@@ -11,7 +11,7 @@ import java.awt.*;
 
 import static com.sun.jna.platform.win32.WinUser.*;
 
-public class WindowZOrderSetter {
+public class WindowsWindowUtils {
     // Windows API 常量
     public static final int ZBID_SYSTEM_TOOLS = 16;
     public static final int ZBID_DESKTOP = 1;

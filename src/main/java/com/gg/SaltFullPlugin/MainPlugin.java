@@ -56,7 +56,7 @@ public class MainPlugin extends Plugin {
             maxHeight = bounds.height;
 
             SwingUtilities.invokeLater(() -> {
-                WinDef.HWND hwnd = WindowZOrderSetter.getWindowHandle(frame);
+                WinDef.HWND hwnd = WindowsWindowUtils.getWindowHandle(frame);
                 System.out.println(frame.getTitle() + " state " + (windowStates.get(hwnd) == null || !windowStates.get(hwnd)));
                 if (windowStates.get(hwnd) == null || !windowStates.get(hwnd)) {
                     setFullScreen(frame, bounds);
@@ -91,7 +91,7 @@ public class MainPlugin extends Plugin {
             return;
         }
 
-        WinDef.HWND hwnd = WindowZOrderSetter.getWindowHandle(window);
+        WinDef.HWND hwnd = WindowsWindowUtils.getWindowHandle(window);
         if (frame.getExtendedState() == Frame.MAXIMIZED_BOTH || Boolean.TRUE.equals(windowStates.get(hwnd))) {
             return;
         }
@@ -102,7 +102,7 @@ public class MainPlugin extends Plugin {
 
     private void makeAllWindowsFullscreen() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            WindowZOrderSetter.allowSleep();
+            WindowsWindowUtils.allowSleep();
             System.out.println("已恢复系统睡眠功能");
         }));
 
@@ -119,7 +119,7 @@ public class MainPlugin extends Plugin {
     }
 
     private void setFullScreen(JFrame frame, Rectangle bounds) {
-        WinDef.HWND hWnd = WindowZOrderSetter.getWindowHandle(frame);
+        WinDef.HWND hWnd = WindowsWindowUtils.getWindowHandle(frame);
         windowStates.put(hWnd, true);
 
         frame.setSize(maxWidth, maxHeight);
@@ -128,16 +128,16 @@ public class MainPlugin extends Plugin {
         frame.setAlwaysOnTop(false);
 
 
-        WindowZOrderSetter.disableWindowsBorder(hWnd);
-        WindowZOrderSetter.disableRoundedCorners(hWnd);
-        WindowZOrderSetter.preventSleep(true);
+        WindowsWindowUtils.disableWindowsBorder(hWnd);
+        WindowsWindowUtils.disableRoundedCorners(hWnd);
+        WindowsWindowUtils.preventSleep(true);
 
         System.out.println("Made window " + frame.getTitle() + " fullscreen.");
         System.out.println("Window size: " + frame.getWidth() + "x" + frame.getHeight());
     }
 
     private void restoreWindow(JFrame frame) {
-        WinDef.HWND hWnd = WindowZOrderSetter.getWindowHandle(frame);
+        WinDef.HWND hWnd = WindowsWindowUtils.getWindowHandle(frame);
 
         frame.setAlwaysOnTop(false);
         frame.setSize(windowSizes.get(hWnd).width(),
@@ -145,12 +145,12 @@ public class MainPlugin extends Plugin {
         frame.setLocation(windowSizes.get(hWnd).x(),
                 windowSizes.get(hWnd).y());
 
-        WindowZOrderSetter.enableWindowsBorder(hWnd);
-        WindowZOrderSetter.enableRoundedCorners(hWnd);
+        WindowsWindowUtils.enableWindowsBorder(hWnd);
+        WindowsWindowUtils.enableRoundedCorners(hWnd);
 
         windowStates.put(hWnd, false);
 
-        WindowZOrderSetter.allowSleep();
+        WindowsWindowUtils.allowSleep();
 
         System.out.println("Restored window " + frame.getTitle() + " to its original size.");
         System.out.println("Window size: " + frame.getWidth() + "x" + frame.getHeight());
