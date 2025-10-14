@@ -1,6 +1,7 @@
 package com.gg.SaltFullPlugin;
 
 import com.sun.jna.platform.win32.WinDef;
+import org.jetbrains.annotations.NotNull;
 import org.pf4j.Plugin;
 
 import javax.swing.*;
@@ -14,8 +15,8 @@ import java.util.Map;
 
 @SuppressWarnings("unused")
 public class MainPlugin extends Plugin {
-    private final Map<String, WindowState> windowSizes = new HashMap<>();
-    private final Map<String, Boolean> windowStates = new HashMap<>();
+    private final Map<WinDef.HWND, WindowState> windowSizes = new HashMap<>();
+    private final Map<WinDef.HWND, Boolean> windowStates = new HashMap<>();
     ComponentAdapter adjustListener = new ComponentAdapter() {
         @Override
         public void componentResized(ComponentEvent e) {
@@ -55,8 +56,9 @@ public class MainPlugin extends Plugin {
             maxHeight = bounds.height;
 
             SwingUtilities.invokeLater(() -> {
-                System.out.println(frame.getTitle() + " state " + (windowStates.get(frame.getTitle()) == null || !windowStates.get(frame.getTitle())));
-                if (windowStates.get(frame.getTitle()) == null || !windowStates.get(frame.getTitle())) {
+                WinDef.HWND hwnd = WindowZOrderSetter.getWindowHandle(frame);
+                System.out.println(frame.getTitle() + " state " + (windowStates.get(hwnd) == null || !windowStates.get(hwnd)));
+                if (windowStates.get(hwnd) == null || !windowStates.get(hwnd)) {
                     setFullScreen(frame, bounds);
                     return;
                 }
@@ -89,11 +91,12 @@ public class MainPlugin extends Plugin {
             return;
         }
 
-        if (frame.getExtendedState() == Frame.MAXIMIZED_BOTH || Boolean.TRUE.equals(windowStates.get(frame.getTitle()))) {
+        WinDef.HWND hwnd = WindowZOrderSetter.getWindowHandle(window);
+        if (frame.getExtendedState() == Frame.MAXIMIZED_BOTH || Boolean.TRUE.equals(windowStates.get(hwnd))) {
             return;
         }
 
-        windowSizes.put(frame.getTitle(), new WindowState(frame.getWidth(), frame.getHeight(),
+        windowSizes.put(hwnd, new WindowState(frame.getWidth(), frame.getHeight(),
                 frame.getX(), frame.getY()));
     }
 
@@ -116,14 +119,15 @@ public class MainPlugin extends Plugin {
     }
 
     private void setFullScreen(JFrame frame, Rectangle bounds) {
-        windowStates.put(frame.getTitle(), true);
+        WinDef.HWND hWnd = WindowZOrderSetter.getWindowHandle(frame);
+        windowStates.put(hWnd, true);
 
         frame.setSize(maxWidth, maxHeight);
         frame.setLocation(bounds.x, bounds.y);
         frame.setAlwaysOnTop(true);
         frame.setAlwaysOnTop(false);
 
-        WinDef.HWND hWnd = WindowZOrderSetter.getWindowHandle(frame);
+
         WindowZOrderSetter.disableWindowsBorder(hWnd);
         WindowZOrderSetter.disableRoundedCorners(hWnd);
         WindowZOrderSetter.preventSleep(true);
@@ -133,17 +137,18 @@ public class MainPlugin extends Plugin {
     }
 
     private void restoreWindow(JFrame frame) {
-        frame.setAlwaysOnTop(false);
-        frame.setSize(windowSizes.get(frame.getTitle()).width(),
-                windowSizes.get(frame.getTitle()).height());
-        frame.setLocation(windowSizes.get(frame.getTitle()).x(),
-                windowSizes.get(frame.getTitle()).y());
-
         WinDef.HWND hWnd = WindowZOrderSetter.getWindowHandle(frame);
+
+        frame.setAlwaysOnTop(false);
+        frame.setSize(windowSizes.get(hWnd).width(),
+                windowSizes.get(hWnd).height());
+        frame.setLocation(windowSizes.get(hWnd).x(),
+                windowSizes.get(hWnd).y());
+
         WindowZOrderSetter.enableWindowsBorder(hWnd);
         WindowZOrderSetter.enableRoundedCorners(hWnd);
 
-        windowStates.put(frame.getTitle(), false);
+        windowStates.put(hWnd, false);
 
         WindowZOrderSetter.allowSleep();
 
@@ -153,6 +158,7 @@ public class MainPlugin extends Plugin {
 
 
     record WindowState(int width, int height, int x, int y) {
+        @NotNull
         @Override
         public String toString() {
             return "WindowState{" +
