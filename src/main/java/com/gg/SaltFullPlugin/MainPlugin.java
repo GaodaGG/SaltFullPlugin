@@ -130,7 +130,7 @@ public class MainPlugin extends Plugin {
 
         for (Window window : Window.getWindows()) {
             if (!(window instanceof JFrame frame)) {
-                return;
+                break;
             }
 
             putWindowSize(window);
