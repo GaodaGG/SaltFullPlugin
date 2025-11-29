@@ -1,22 +1,35 @@
 package com.gg.SaltFullPlugin;
 
 import com.sun.jna.platform.win32.WinDef;
+
 import org.jetbrains.annotations.NotNull;
 import org.pf4j.Plugin;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.AWTEvent;
+import java.awt.Frame;
+import java.awt.GraphicsDevice;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.AWTEventListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 
 @SuppressWarnings("unused")
 public class MainPlugin extends Plugin {
     private final Map<WinDef.HWND, WindowState> windowSizes = new HashMap<>();
     private final Map<WinDef.HWND, Boolean> windowStates = new HashMap<>();
+
+    private int maxWidth = Integer.MAX_VALUE;
+    private int maxHeight = Integer.MAX_VALUE;
+
     ComponentAdapter adjustListener = new ComponentAdapter() {
         @Override
         public void componentResized(ComponentEvent e) {
@@ -28,8 +41,7 @@ public class MainPlugin extends Plugin {
             putWindowSize((Window) e.getSource());
         }
     };
-    private int maxWidth = Integer.MAX_VALUE;
-    private int maxHeight = Integer.MAX_VALUE;
+
     AWTEventListener eventListener = event -> {
         if (event.getID() != WindowEvent.WINDOW_OPENED && event.getID() != WindowEvent.WINDOW_STATE_CHANGED) {
             return;
@@ -42,9 +54,9 @@ public class MainPlugin extends Plugin {
 
         System.out.println("Window state changed: " + frame.getTitle() + " - " + event.getID());
 
-        if (event.getID() == WindowEvent.WINDOW_OPENED) {
-            putWindowSize(window);
+        putWindowSize(window);
 
+        if (event.getID() == WindowEvent.WINDOW_OPENED) {
             frame.addComponentListener(adjustListener);
             return;
         }
@@ -72,7 +84,6 @@ public class MainPlugin extends Plugin {
     public void start() {
         super.start();
         System.out.println("MainPlugin started");
-//        ConsoleWindow.showConsole();
         makeAllWindowsFullscreen();
     }
 
@@ -84,6 +95,9 @@ public class MainPlugin extends Plugin {
         for (Window window : Window.getWindows()) {
             window.removeComponentListener(adjustListener);
         }
+
+        windowSizes.clear();
+        windowStates.clear();
     }
 
     private void putWindowSize(Window window) {
@@ -92,7 +106,13 @@ public class MainPlugin extends Plugin {
         }
 
         WinDef.HWND hwnd = WindowsWindowUtils.getWindowHandle(window);
+        if (hwnd == null) {
+            System.err.println("putWindowSize: HWND is null for window: " + frame.getTitle());
+            return;
+        }
+
         if (frame.getExtendedState() == Frame.MAXIMIZED_BOTH || Boolean.TRUE.equals(windowStates.get(hwnd))) {
+            System.err.println("putWindowSize: Window is maximized or fullscreen, skipping size update for window: " + frame.getTitle());
             return;
         }
 
@@ -106,6 +126,8 @@ public class MainPlugin extends Plugin {
             System.out.println("已恢复系统睡眠功能");
         }));
 
+        Toolkit.getDefaultToolkit().addAWTEventListener(eventListener, AWTEvent.WINDOW_EVENT_MASK);
+
         for (Window window : Window.getWindows()) {
             if (!(window instanceof JFrame frame)) {
                 return;
@@ -114,8 +136,6 @@ public class MainPlugin extends Plugin {
             putWindowSize(window);
             frame.addComponentListener(adjustListener);
         }
-
-        Toolkit.getDefaultToolkit().addAWTEventListener(eventListener, AWTEvent.WINDOW_EVENT_MASK);
     }
 
     private void setFullScreen(JFrame frame, Rectangle bounds) {
@@ -138,12 +158,22 @@ public class MainPlugin extends Plugin {
 
     private void restoreWindow(JFrame frame) {
         WinDef.HWND hWnd = WindowsWindowUtils.getWindowHandle(frame);
+        AtomicReference<WindowState> windowStateAtomicReference = new AtomicReference<>(windowSizes.get(hWnd));
+        if (windowStateAtomicReference.get() == null) {
+            windowSizes.forEach((hwnd, state) -> {
+                if (!WindowsWindowUtils.getWindowTitle(hwnd).equals("Untitled")) {
+                    windowStateAtomicReference.set(state);
+                    putWindowSize(frame);
+                }
+            });
+        }
+        WindowState windowState = windowStateAtomicReference.get();
 
         frame.setAlwaysOnTop(false);
-        frame.setSize(windowSizes.get(hWnd).width(),
-                windowSizes.get(hWnd).height());
-        frame.setLocation(windowSizes.get(hWnd).x(),
-                windowSizes.get(hWnd).y());
+        frame.setSize(windowState.width(),
+                windowState.height());
+        frame.setLocation(windowState.x(),
+                windowState.y());
 
         WindowsWindowUtils.enableWindowsBorder(hWnd);
         WindowsWindowUtils.enableRoundedCorners(hWnd);

@@ -1,3 +1,5 @@
+import javax.swing.filechooser.FileSystemView
+
 plugins {
     id 'java-library'
     id 'org.jetbrains.kotlin.jvm' version '2.0.21'
@@ -61,7 +63,7 @@ tasks.named("jar") {
 }
 
 tasks.register("plugin", Jar) {
-    destinationDirectory = file(System.getenv("APPDATA") + "/Salt Player for Windows/workshop/plugins/")
+    destinationDirectory = FileSystemView.getFileSystemView().getHomeDirectory()
     archiveFileName = "plugin-${pluginName}-${version}.zip"
     archiveBaseName.set("plugin-" + pluginName + "-" + version)
 
@@ -76,4 +78,6 @@ tasks.register("plugin", Jar) {
         })
     }
     archiveExtension = 'zip'
+
+    println("Plugin package created: ${archiveFile.get().asFile.absolutePath}")
 }

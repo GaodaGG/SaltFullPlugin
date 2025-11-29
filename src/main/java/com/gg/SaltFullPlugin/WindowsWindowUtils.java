@@ -1,5 +1,15 @@
 package com.gg.SaltFullPlugin;
 
+import static com.sun.jna.platform.win32.WinUser.GWL_EXSTYLE;
+import static com.sun.jna.platform.win32.WinUser.GWL_STYLE;
+import static com.sun.jna.platform.win32.WinUser.SWP_FRAMECHANGED;
+import static com.sun.jna.platform.win32.WinUser.SWP_NOMOVE;
+import static com.sun.jna.platform.win32.WinUser.SWP_NOSIZE;
+import static com.sun.jna.platform.win32.WinUser.SWP_SHOWWINDOW;
+import static com.sun.jna.platform.win32.WinUser.WS_BORDER;
+import static com.sun.jna.platform.win32.WinUser.WS_OVERLAPPED;
+import static com.sun.jna.platform.win32.WinUser.WS_THICKFRAME;
+
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
 import com.sun.jna.WString;
@@ -7,9 +17,9 @@ import com.sun.jna.platform.win32.WinDef;
 import com.sun.jna.ptr.IntByReference;
 import com.sun.jna.win32.StdCallLibrary;
 
-import java.awt.*;
-
-import static com.sun.jna.platform.win32.WinUser.*;
+import java.awt.Dialog;
+import java.awt.Frame;
+import java.awt.Window;
 
 public class WindowsWindowUtils {
     // Windows API 常量
@@ -66,62 +76,16 @@ public class WindowsWindowUtils {
         Kernel32.INSTANCE.SetThreadExecutionState(new WinDef.DWORD(flags));
     }
 
-    // 设置窗口到特定 Z 序级别
-    public static boolean setWindowZBand(Window window, int zBandId) {
-        try {
-            // 获取窗口句柄
-            WinDef.HWND hwnd = getWindowHandle(window);
-            if (hwnd == null) {
-                System.err.println("无法获取窗口句柄");
-                return false;
-            }
-
-            // 禁用圆角效果（可选，但推荐）
-            disableRoundedCorners(hwnd);
-
-            // 设置 Z 序
-            return setZBandWithSetWindowPos(hwnd, zBandId);
-        } catch (Exception e) {
-            System.err.println("设置 Z 序失败: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    // 使用 SetWindowPos 设置 Z 序
-    private static boolean setZBandWithSetWindowPos(WinDef.HWND hwnd, int zBandId) {
-        // 特殊句柄值对应不同的 Z 序级别
-        WinDef.HWND hWndInsertAfter;
-
-        switch (zBandId) {
-            case ZBID_DESKTOP:
-                hWndInsertAfter = new WinDef.HWND(Pointer.createConstant(1));
-                break;
-            case ZBID_SYSTEM_TOOLS:
-                // 获取桌面窗口 (Progman)
-                WinDef.HWND hwndProgman = User32.INSTANCE.FindWindowW(new WString("Progman"), new WString("Program Manager"));
-                if (hwndProgman == null) {
-                    System.err.println("找不到桌面窗口 (Progman)");
-                    return false;
-                }
-                hWndInsertAfter = hwndProgman;
-                break;
-            default:
-                hWndInsertAfter = new WinDef.HWND(Pointer.createConstant(0));
-        }
-
-        // 设置窗口位置标志 (不改变大小/位置)
-        final int SWP_NOSIZE = 0x0001;
-        final int SWP_NOMOVE = 0x0002;
-        final int SWP_NOACTIVATE = 0x0010;
-        final int SWP_FLAGS = SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE;
-
-        return User32.INSTANCE.SetWindowPos(
-                hwnd,
-                hWndInsertAfter,
-                0, 0, 0, 0,
-                SWP_FLAGS
-        );
+    /**
+     * 获取窗口标题
+     *
+     * @param hwnd 窗口句柄
+     * @return 窗口标题
+     */
+    public static String getWindowTitle(WinDef.HWND hwnd) {
+        char[] buffer = new char[512];
+        User32.INSTANCE.GetWindowTextW(hwnd, buffer, 512);
+        return Native.toString(buffer);
     }
 
     // 禁用窗口边框和阴影
@@ -205,40 +169,41 @@ public class WindowsWindowUtils {
         }
     }
 
-    // 隐藏窗口的任务栏条目
-    public static void hideFromTaskbar(Window window) {
-        try {
-            // 获取窗口句柄
-            WinDef.HWND hwnd = getWindowHandle(window);
-            if (hwnd == null) return;
-
-            // 获取当前扩展样式
-            int exStyle = User32.INSTANCE.GetWindowLongA(hwnd, GWL_EXSTYLE);
-
-            // 添加工具窗口样式
-            exStyle |= WS_EX_TOOLWINDOW;
-
-            // 设置新的扩展样式
-            User32.INSTANCE.SetWindowLongA(hwnd, GWL_EXSTYLE, exStyle);
-        } catch (Exception e) {
-            System.err.println("隐藏任务栏条目失败: " + e.getMessage());
-        }
-    }
-
     // 获取窗口句柄 (HWND) - 兼容性更好的版本
     public static WinDef.HWND getWindowHandle(Window window) {
-        try {
-            if (window instanceof Frame frame) {
-                return new WinDef.HWND(Native.getWindowPointer(frame));
-            } else if (window instanceof Dialog dialog) {
-                return new WinDef.HWND(Native.getWindowPointer(dialog));
+        if (window instanceof Frame frame) {
+            Pointer windowPointer;
+            try {
+                windowPointer = Native.getWindowPointer(frame);
+            } catch (Exception e) {
+                String title = frame.getTitle();
+                windowPointer = foundWindowPointerByTitle(title);
             }
-
-            return null;
-        } catch (Exception e) {
-            System.err.println("获取窗口句柄失败: " + e.getMessage());
-            return null;
+            return new WinDef.HWND(windowPointer);
+        } else if (window instanceof Dialog dialog) {
+            Pointer windowPointer;
+            try {
+                windowPointer = Native.getWindowPointer(dialog);
+            } catch (Exception e) {
+                String title = dialog.getTitle();
+                windowPointer = foundWindowPointerByTitle(title);
+            }
+            return new WinDef.HWND(windowPointer);
         }
+
+        return null;
+    }
+
+    public static Pointer foundWindowPointerByTitle(String title) {
+        WinDef.HWND hwnd = User32.INSTANCE.FindWindowW(null, new WString(title));
+        if (hwnd != null) {
+            // 验证找到的窗口是否匹配
+            String foundTitle = getWindowTitle(hwnd);
+            if (title.equals(foundTitle)) {
+                return hwnd.getPointer();
+            }
+        }
+        return null;
     }
 
     // 检查是否为 Windows 11 或更低版本
@@ -265,6 +230,8 @@ public class WindowsWindowUtils {
         int SetWindowLongA(WinDef.HWND hWnd, int nIndex, int dwNewLong);
 
         WinDef.HWND FindWindowW(WString lpClassName, WString lpWindowName);
+
+        int GetWindowTextW(WinDef.HWND hWnd, char[] lpString, int nMaxCount);
 
         boolean SetWindowPos(
                 WinDef.HWND hWnd,
